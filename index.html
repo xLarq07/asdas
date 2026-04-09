@@ -138,7 +138,7 @@
         .cross { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: #ef4444; font-size: 0.6em; font-weight: 800; opacity: 0.7; animation: crossPop 0.2s ease-out; }
         [data-theme="dark"] .cross { color: #f87171; }
 
-        /* Modals */
+        /* Modals & UI Enhancements */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: none; justify-content: center; align-items: center; z-index: 100; backdrop-filter: blur(5px); }
         .modal-overlay.active { display: flex; }
         
@@ -160,12 +160,26 @@
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
         #confetti-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: -1; }
+
+        /* Bildirim (Toast) Mesajı */
+        .toast {
+            position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-20px);
+            background: #10b981; color: white; padding: 12px 24px;
+            border-radius: 12px; font-weight: 800; z-index: 1000;
+            opacity: 0; pointer-events: none; transition: 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 10px 25px rgba(16, 185, 129, 0.4); text-align: center;
+        }
+        .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+        .toast.error { background: #ef4444; box-shadow: 0 10px 25px rgba(239, 68, 68, 0.4); }
     </style>
 </head>
 <body>
 
+    <!-- Bildirim -->
+    <div id="toast" class="toast"></div>
+
     <!-- Ana Ekran -->
-    <div id="home-screen" class="screen active">
+    <div id="home-screen" class="screen">
         <div class="header">
             <h1 onclick="app.devUnlockClick()">👑 QueenMatrix</h1>
             <div class="controls-group">
@@ -203,7 +217,7 @@
             <div id="board-container"></div>
             <div id="loading-overlay">
                 <div class="spinner"></div>
-                <div>Zorlu Bölüm Üretiliyor...</div>
+                <div id="loading-maintext">Zorlu Bölüm Üretiliyor...</div>
                 <div id="loading-subtext">Lütfen bekleyin</div>
             </div>
         </div>
@@ -226,7 +240,12 @@
         </div>
     </div>
 
-    <script>
+    <!-- Global Firebase Yüklemeleri (ES Modülleri) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
         // Basit Ses Üretimi
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         const playSound = (type) => {
@@ -265,7 +284,6 @@
             } catch(e){}
         };
 
-        // DETERMINISTIC RNG (Tohumlu Rastgele Sayı Üretici - Herkes için aynı bölümü sağlar)
         const createPRNG = (seed) => {
             return () => {
                 let t = seed += 0x6D2B79F5;
@@ -275,7 +293,6 @@
             }
         };
 
-        // Algoritmalar
         const configTargetQueens = (size, rnd) => {
             let cols = Array(size).fill(-1);
             let usedCols = Array(size).fill(false);
@@ -372,11 +389,9 @@
 
         const buildLevelData = (size, lvl) => {
             return new Promise((resolve) => {
-                // Her seviye için benzersiz ama sabit bir tohum (seed) belirle
                 let rnd = createPRNG(lvl * 1234567); 
-                
                 const work = () => {
-                    for(let i=0; i<15; i++) { // UI kilitlenmesin diye ufak yığınlar halinde üretir
+                    for(let i=0; i<15; i++) {
                         let queens = configTargetQueens(size, rnd);
                         if (queens) {
                             let regs = generateRegions(queens, size, rnd);
@@ -394,7 +409,6 @@
 
         const formatTime = (s) => `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
 
-        // Konfeti Sınıfı
         class Confetti {
             constructor(canvas) {
                 this.canvas = canvas;
@@ -447,36 +461,148 @@
             }
         }
 
+        // Firebase Yapılandırması (Eğer platform destekliyorsa otomatik çekecek)
+        let firebaseConfig = {};
+        try {
+            if (typeof __firebase_config !== 'undefined') {
+                firebaseConfig = JSON.parse(__firebase_config);
+            } else {
+                // NOT: Eğer bu HTML dosyasını doğrudan Github Pages üzerinden çalıştırıp BULUT KAYIT istiyorsanız,
+                // Kendi Firebase projenizi oluşturup Config objenizi buraya yapıştırmalısınız.
+                // Aksi takdirde sistem Firebase'i es geçip otomatik olarak LocalStorage (çevrimdışı kayıt) ile çalışmaya devam eder.
+                /*
+                firebaseConfig = {
+                    apiKey: "YOUR_API_KEY",
+                    authDomain: "YOUR_AUTH_DOMAIN",
+                    projectId: "YOUR_PROJECT_ID",
+                    // ...
+                };
+                */
+            }
+        } catch (e) {}
+
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'queenmatrix';
+        let fbApp, auth, db;
+        
+        if (Object.keys(firebaseConfig).length > 0) {
+            fbApp = initializeApp(firebaseConfig);
+            auth = getAuth(fbApp);
+            db = getFirestore(fbApp);
+        }
+
         class GameApp {
             constructor() {
                 this.MAX_LEVELS = 300;
                 this.devClickCount = 0;
-                this.loadProgress();
                 this.state = null;
                 this.history = [];
                 this.timerInt = null;
                 this.confetti = new Confetti(document.getElementById('confetti-canvas'));
+                this.userId = null;
+                this.progress = { levels: {}, theme: 'dark', devMode: false, hints: 0 };
+            }
+
+            async init() {
+                this.showLoadingScreen("Buluta bağlanıyor...");
+                
+                // 1. Firebase Auth Başlat
+                if (auth) {
+                    try {
+                        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                            await signInWithCustomToken(auth, __initial_auth_token);
+                        } else {
+                            await signInAnonymously(auth);
+                        }
+                        
+                        await new Promise((resolve) => {
+                            const unsubscribe = onAuthStateChanged(auth, (user) => {
+                                if(user) this.userId = user.uid;
+                                unsubscribe();
+                                resolve();
+                            });
+                        });
+                    } catch (e) {
+                        console.log("Firebase Auth failed, falling back to local storage.", e);
+                    }
+                }
+
+                // 2. İlerlemeyi Yükle
+                await this.loadProgress();
+                
+                this.hideLoadingScreen();
                 
                 if (this.progress.theme === 'light') {
                     document.documentElement.setAttribute('data-theme', 'light');
                 }
                 
+                document.getElementById('home-screen').classList.add('active');
                 this.renderMenu();
             }
+
+            showToast(msg, isError = false) {
+                const toast = document.getElementById('toast');
+                toast.innerHTML = msg;
+                if(isError) toast.classList.add('error');
+                else toast.classList.remove('error');
+                
+                toast.classList.add('show');
+                setTimeout(() => toast.classList.remove('show'), 3000);
+            }
+
+            showLoadingScreen(text) {
+                document.getElementById('loading-overlay').style.display = 'flex';
+                document.getElementById('loading-maintext').textContent = text;
+                document.getElementById('loading-subtext').textContent = "Lütfen bekleyin";
+            }
+
+            hideLoadingScreen() {
+                document.getElementById('loading-overlay').style.display = 'none';
+            }
             
-            loadProgress() {
-                let saved = localStorage.getItem('qn_progress_v3');
-                if (saved) {
-                    this.progress = JSON.parse(saved);
-                    // Eski oyuncularda hint yoksa 0 olarak tanımla
+            async loadProgress() {
+                // Her zaman önce yerel veriyi al (Eğer buluttan gelmezse güvende olmak için)
+                let localSaved = localStorage.getItem('qn_progress_v4');
+                if (localSaved) {
+                    this.progress = JSON.parse(localSaved);
                     if (this.progress.hints === undefined) this.progress.hints = 0;
-                } else {
-                    this.progress = { levels: {}, theme: 'dark', devMode: false, hints: 0 };
+                }
+
+                // Eğer Firebase devredeyse, verileri buluttan çek
+                if (this.userId && db) {
+                    try {
+                        const docRef = doc(db, 'artifacts', appId, 'users', this.userId, 'gamedata', 'progress');
+                        const docSnap = await getDoc(docRef);
+                        
+                        if (docSnap.exists()) {
+                            this.progress = docSnap.data();
+                            if (this.progress.hints === undefined) this.progress.hints = 0;
+                            
+                            // Yerel veriyi bulutla eşitle
+                            localStorage.setItem('qn_progress_v4', JSON.stringify(this.progress));
+                        } else {
+                            // Bulutta veri yoksa, yerel veriyi buluta gönder
+                            if (localSaved) await this.saveProgress();
+                        }
+                    } catch (e) {
+                        console.log("Bulut yükleme hatası. Çevrimdışı devam ediliyor.");
+                    }
                 }
             }
             
-            saveProgress() {
-                localStorage.setItem('qn_progress_v3', JSON.stringify(this.progress));
+            async saveProgress() {
+                // Her halükarda yerel diske kaydet
+                localStorage.setItem('qn_progress_v4', JSON.stringify(this.progress));
+                
+                // Firebase aktifse buluta kaydet
+                if (this.userId && db) {
+                    try {
+                        const docRef = doc(db, 'artifacts', appId, 'users', this.userId, 'gamedata', 'progress');
+                        // merge: true ile sadece değişenleri günceller, veriyi yok etmez
+                        await setDoc(docRef, this.progress, { merge: true });
+                    } catch (e) {
+                        console.log("Buluta kaydetme hatası.");
+                    }
+                }
             }
 
             toggleTheme() {
@@ -494,7 +620,7 @@
                     this.progress.devMode = true;
                     this.saveProgress();
                     this.renderMenu();
-                    alert("Geliştirici Modu Aktif! Tüm 300 bölümün kilidi açıldı. İyi testler!");
+                    this.showToast("🛠️ Geliştirici Modu Aktif!<br>Tüm bölümler açıldı.");
                 }
             }
             
@@ -522,7 +648,7 @@
                 let h = Math.floor(totalTimeSeconds / 3600);
                 let m = Math.floor((totalTimeSeconds % 3600) / 60);
                 let s = totalTimeSeconds % 60;
-                let timeStr = h > 0 ? `${h}s ${m}d ${s}sn` : `${m}d ${s}sn`;
+                let timeStr = h > 0 ? `${h}sa ${m}dk ${s}sn` : `${m}dk ${s}sn`;
                 document.getElementById('total-time-text').textContent = timeStr;
 
                 for(let i=1; i<=this.MAX_LEVELS; i++) {
@@ -557,7 +683,6 @@
                 this.renderMenu();
             }
             
-            // Hassas hesaplanmış boyut/seviye eğrisi
             getSizeForLevel(lvl) {
                 if(lvl <= 20) return 4;
                 if(lvl <= 40) return 5;
@@ -581,14 +706,12 @@
                 
                 let size = this.getSizeForLevel(lvl);
                 
-                const loadingScreen = document.getElementById('loading-overlay');
-                const subtext = document.getElementById('loading-subtext');
-                loadingScreen.style.display = 'flex';
-                subtext.textContent = size >= 12 ? "Bu devasa harita birkac saniye alabilir..." : "Lütfen bekleyin...";
+                this.showLoadingScreen("Zorlu Bölüm Üretiliyor...");
+                if (size >= 12) document.getElementById('loading-subtext').textContent = "Bu devasa harita birkac saniye alabilir...";
                 
                 let data = await buildLevelData(size, lvl);
                 
-                loadingScreen.style.display = 'none';
+                this.hideLoadingScreen();
                 
                 this.state = {
                     lvl: lvl,
@@ -670,7 +793,6 @@
                         cell.style.fontSize = cellFontSize + 'px';
                         
                         let reg = this.state.regions[r][c];
-                        // 16 renk destekliyoruz (0-15)
                         cell.style.backgroundColor = `var(--region-${reg % 16})`;
                         
                         let vBorder = '1px solid var(--cell-border)';
@@ -749,10 +871,7 @@
             
             useHint() {
                 if (this.progress.hints <= 0) {
-                    let btn = document.getElementById('hint-btn');
-                    let oldHTML = btn.innerHTML;
-                    btn.innerHTML = "💡 Bitti!";
-                    setTimeout(() => btn.innerHTML = oldHTML, 1000);
+                    this.showToast("💡 İpucu Hakkın Bitti!");
                     return;
                 }
                 
@@ -765,7 +884,6 @@
                 }
                 
                 if (cands.length > 0) {
-                    // İpucu kullanırken sabit seed'e gerek yok, gameplay kısmı dinamik kalabilir
                     let t = cands[Math.floor(Math.random() * cands.length)];
                     for(let r=0; r<this.state.size; r++){
                         for(let c=0; c<this.state.size; c++){
@@ -803,13 +921,11 @@
                     let isFirstWin = !this.progress.levels[this.state.lvl];
                     let earnedHint = false;
                     
-                    // Her 10 bölüm geçildiğinde ve daha önce bitirilmemişse ödül ver
                     if (isFirstWin && this.state.lvl % 10 === 0) {
                         this.progress.hints += 2;
                         earnedHint = true;
                     }
                     
-                    // Sadece ilk oynayışta veya rekor kırıldığında süreyi kaydet
                     if (isFirstWin || this.state.time < this.progress.levels[this.state.lvl].time) {
                         this.progress.levels[this.state.lvl] = {
                             time: this.state.time
@@ -842,7 +958,10 @@
             }
         }
         
+        // Uygulamayı Başlat (Tüm Firebase ve Loading İşlemleri Tamamlanınca Ekrana Düşer)
         const app = new GameApp();
+        window.app = app;
+        app.init();
     </script>
 </body>
 </html>
