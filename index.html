@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="tr" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>QueenMatrix</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #f8fafc;
+            --text: #0f172a;
+            --card-bg: #ffffff;
+            --region-border: #0f172a;
+            --cell-border: rgba(0,0,0,0.08);
+            --error-bg: #fca5a5;
+            --success-bg: #86efac;
+            --btn-bg: #3b82f6;
+            --btn-text: #ffffff;
+            --lock-bg: #e2e8f0;
+            --lock-text: #94a3b8;
+            --header-bg: #ffffff;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            
+            /* 16 Renkli Palet (Light) */
+            --region-0: #fde68a;
+            --region-1: #bae6fd;
+            --region-2: #bfdbfe;
+            --region-3: #a7f3d0;
+            --region-4: #fbcfe8;
+            --region-5: #e9d5ff;
+            --region-6: #fecaca;
+            --region-7: #fed7aa;
+            --region-8: #d9f99d;
+            --region-9: #e5e5e5;
+            --region-10: #fde047;
+            --region-11: #5eead4;
+            --region-12: #c7d2fe;
+            --region-13: #fecdd3;
+            --region-14: #bbf7d0;
+            --region-15: #e2e8f0;
+        }
+
+        [data-theme="dark"] {
+            --bg: #0f172a;
+            --text: #f8fafc;
+            --card-bg: #1e293b;
+            --header-bg: #1e293b;
+            --region-border: #f8fafc;
+            --cell-border: rgba(255,255,255,0.08);
+            --error-bg: #991b1b;
+            --success-bg: #166534;
+            --btn-bg: #3b82f6;
+            --lock-bg: #334155;
+            --lock-text: #64748b;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+
+            /* 16 Renkli Palet (Dark) */
+            --region-0: #78350f;
+            --region-1: #0c4a6e;
+            --region-2: #1e3a8a;
+            --region-3: #064e3b;
+            --region-4: #831843;
+            --region-5: #4c1d95;
+            --region-6: #7f1d1d;
+            --region-7: #7c2d12;
+            --region-8: #3f6212;
+            --region-9: #262626;
+            --region-10: #b45309;
+            --region-11: #0f766e;
+            --region-12: #4338ca;
+            --region-13: #be123c;
+            --region-14: #15803d;
+            --region-15: #020617;
+        }
+
+        * { box-sizing: border-box; font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+        
+        body { margin: 0; padding: 0; background: var(--bg); color: var(--text); overflow-x: hidden; transition: background-color 0.3s, color 0.3s; }
+        
+        .screen { display: none; padding: 20px; max-width: 600px; margin: 0 auto; min-height: 100vh; flex-direction: column; }
+        .screen.active { display: flex; animation: fadeIn 0.4s ease-out; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; background: var(--header-bg); padding: 15px 20px; border-radius: 16px; box-shadow: var(--shadow); transition: 0.3s; }
+        .header h1 { margin: 0; font-size: 24px; font-weight: 800; display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none; }
+        
+        button { cursor: pointer; border: none; border-radius: 12px; font-weight: 600; transition: all 0.15s ease; outline: none; display: flex; align-items: center; justify-content: center; gap: 6px; }
+        button:active { transform: scale(0.92); }
+        
+        .icon-btn { background: var(--bg); color: var(--text); padding: 10px; font-size: 20px; border-radius: 12px; }
+        .icon-btn:hover { filter: brightness(0.95); }
+        [data-theme="dark"] .icon-btn:hover { filter: brightness(1.2); }
+
+        .controls-group { display: flex; gap: 8px; }
+
+        /* Level Grid */
+        .stats-bar { padding: 0 10px; font-size: 15px; font-weight: 600; opacity: 0.8; margin-bottom: 15px; display: flex; justify-content: space-between; }
+        #level-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(60px, 1fr)); gap: 10px; margin-top: 10px; padding-bottom: 40px; }
+        .level-btn { background: var(--btn-bg); color: var(--btn-text); padding: 12px 0; font-size: 16px; font-weight: 800; border-radius: 12px; text-align: center; box-shadow: var(--shadow); display: flex; flex-direction: column; align-items: center; justify-content: center; transition: 0.2s; }
+        .level-btn:active { transform: scale(0.92); }
+        .level-btn.locked { background: var(--lock-bg); color: var(--lock-text); cursor: not-allowed; box-shadow: none; }
+        .level-btn.locked:active { transform: none; }
+        .level-btn .level-time { font-size: 11px; margin-top: 4px; font-weight: 800; color: #fbbf24; letter-spacing: 0.5px; }
+        [data-theme="dark"] .level-btn .level-time { color: #fef08a; }
+        .level-btn .no-time { font-size: 11px; margin-top: 4px; opacity: 0; }
+
+        /* Game UI */
+        .game-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; background: var(--header-bg); padding: 12px 16px; border-radius: 16px; box-shadow: var(--shadow); }
+        .game-controls { display: flex; gap: 8px; align-items: center; }
+        
+        .pill { background: var(--bg); padding: 6px 14px; border-radius: 20px; font-size: 15px; font-weight: 800; color: var(--text); }
+        
+        #hint-btn { background: #f59e0b; color: white; padding: 10px 16px; box-shadow: 0 4px 6px rgba(245, 158, 11, 0.2); }
+        #undo-btn { background: var(--bg); color: var(--text); padding: 10px; }
+        
+        /* Board Area */
+        .board-wrapper { flex: 1; display: flex; align-items: center; justify-content: center; width: 100%; position: relative; margin-bottom: 20px; }
+        #board-container { width: 100%; aspect-ratio: 1; max-width: 500px; display: grid; border-radius: 12px; overflow: hidden; background: var(--region-border); gap: 0px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); border: 2px solid var(--region-border); transition: 0.3s; }
+        
+        .cell { background: var(--bg); display: flex; justify-content: center; align-items: center; cursor: pointer; user-select: none; transition: background 0.2s, filter 0.2s; position: relative; min-width: 0; min-height: 0; overflow: hidden; line-height: 1; }
+        .cell:hover { filter: brightness(0.95); }
+        [data-theme="dark"] .cell:hover { filter: brightness(1.1); }
+        
+        @keyframes pop {
+            0% { transform: scale(0.2) rotate(-10deg); opacity: 0; }
+            60% { transform: scale(1.15) rotate(5deg); }
+            100% { transform: scale(1) rotate(0); opacity: 1; }
+        }
+
+        @keyframes crossPop {
+            0% { transform: scale(0); opacity: 0; }
+            80% { transform: scale(1.2); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .queen { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; animation: pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .cross { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: #ef4444; font-size: 0.6em; font-weight: 800; opacity: 0.7; animation: crossPop 0.2s ease-out; }
+        [data-theme="dark"] .cross { color: #f87171; }
+
+        /* Modals */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: none; justify-content: center; align-items: center; z-index: 100; backdrop-filter: blur(5px); }
+        .modal-overlay.active { display: flex; }
+        
+        .modal-box { background: var(--card-bg); color: var(--text); padding: 35px 30px; border-radius: 24px; text-align: center; width: 90%; max-width: 380px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1); position: relative; overflow: hidden; }
+        .modal-box h2 { margin: 0 0 15px 0; color: #10b981; font-size: 32px; font-weight: 900; }
+        .modal-box p { font-size: 16px; margin-bottom: 30px; opacity: 0.8; line-height: 1.5; }
+        .modal-box .stats-row { display: flex; justify-content: space-around; margin-bottom: 30px; background: var(--bg); padding: 15px; border-radius: 16px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05); }
+        .modal-box .s-val { display: block; font-size: 24px; font-weight: 900; color: var(--text); }
+        .modal-box .s-lbl { font-size: 13px; font-weight: 600; opacity: 0.6; text-transform: uppercase; letter-spacing: 1px; }
+        
+        .modal-btn { background: var(--btn-bg); color: var(--btn-text); padding: 16px 24px; font-size: 18px; border-radius: 14px; width: 100%; box-shadow: 0 4px 14px rgba(59, 130, 246, 0.4); }
+        .modal-btn.secondary { background: var(--lock-bg); color: var(--text); box-shadow: none; margin-top: 10px; }
+
+        @keyframes slideUp { from { transform: translateY(60px) scale(0.9); opacity: 0; } to { transform: translateY(0) scale(1); opacity: 1; } }
+        
+        #loading-overlay { position: absolute; inset: 0; background: var(--card-bg); color: var(--text); display: none; justify-content: center; align-items: center; z-index: 50; font-weight: 800; font-size: 20px; border-radius: 12px; flex-direction: column; gap: 15px; text-align: center; padding: 20px; }
+        #loading-subtext { font-size: 12px; opacity: 0.6; margin-top: 5px; font-weight: 600; }
+        .spinner { border: 4px solid var(--cell-border); border-top: 4px solid var(--btn-bg); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        #confetti-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: -1; }
+    </style>
+</head>
+<body>
+
+    <!-- Ana Ekran -->
+    <div id="home-screen" class="screen active">
+        <div class="header">
+            <h1 onclick="app.devUnlockClick()">👑 QueenMatrix</h1>
+            <div class="controls-group">
+                <button class="icon-btn" onclick="app.toggleTheme()" title="Temayı Değiştir">🌓</button>
+            </div>
+        </div>
+        
+        <div class="stats-bar" style="flex-direction: column; gap: 8px;">
+            <div style="display: flex; justify-content: space-between;">
+                <span>İlerleme: <span id="progress-text" style="color: var(--btn-bg);">0/300</span></span>
+                <span>Toplam Süre: <span id="total-time-text" style="color: var(--btn-bg);">00d 00sn</span></span>
+            </div>
+        </div>
+
+        <div id="level-grid"></div>
+    </div>
+
+    <!-- Oyun Ekranı -->
+    <div id="game-screen" class="screen">
+        <div class="game-bar">
+            <button class="icon-btn" onclick="app.showHome()" title="Ana Menü">⬅️</button>
+            <div class="pill" id="level-title">Bölüm 1</div>
+            <div class="game-controls">
+                <button class="icon-btn" id="undo-btn" onclick="app.undo()" title="Geri Al">↩️</button>
+                <button class="icon-btn" onclick="app.resetLevel()" title="Sıfırla">🔄</button>
+                <button id="hint-btn" onclick="app.useHint()" title="İpucu">💡 <span id="hint-count">3</span></button>
+            </div>
+        </div>
+        
+        <div class="game-bar" style="margin-bottom: 20px; padding: 12px 20px; justify-content: center;">
+            <div style="font-weight: 600; opacity: 0.8;">Süre: <span id="timer-text" style="font-weight: 800; color: var(--text); opacity: 1;">00:00</span></div>
+        </div>
+
+        <div class="board-wrapper">
+            <div id="board-container"></div>
+            <div id="loading-overlay">
+                <div class="spinner"></div>
+                <div>Zorlu Bölüm Üretiliyor...</div>
+                <div id="loading-subtext">Lütfen bekleyin</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Kazanma Ekranı -->
+    <div id="win-modal" class="modal-overlay">
+        <div class="modal-box">
+            <canvas id="confetti-canvas"></canvas>
+            <h2>Harika! 👑</h2>
+            <p>Bölümü başarıyla tamamladın.</p>
+            <div class="stats-row" style="justify-content: center;">
+                <div>
+                    <span class="s-val" id="win-time">00:00</span>
+                    <span class="s-lbl">Süre</span>
+                </div>
+            </div>
+            <button class="modal-btn" onclick="app.nextLevel()">Sıradaki Bölüm ➔</button>
+            <button class="modal-btn secondary" onclick="app.showHome()">Ana Menü</button>
+        </div>
+    </div>
+
+    <script>
+        // Basit Ses Üretimi
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const playSound = (type) => {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            try {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                
+                let t = audioCtx.currentTime;
+                if (type === 'click') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(600, t);
+                    osc.frequency.exponentialRampToValueAtTime(900, t + 0.08);
+                    gain.gain.setValueAtTime(0.2, t);
+                    gain.gain.exponentialRampToValueAtTime(0.01, t + 0.08);
+                    osc.start(t); osc.stop(t + 0.08);
+                } else if (type === 'cross') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(300, t);
+                    osc.frequency.exponentialRampToValueAtTime(200, t + 0.08);
+                    gain.gain.setValueAtTime(0.1, t);
+                    gain.gain.exponentialRampToValueAtTime(0.01, t + 0.08);
+                    osc.start(t); osc.stop(t + 0.08);
+                } else if (type === 'win') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(400, t);
+                    osc.frequency.setValueAtTime(600, t + 0.1);
+                    osc.frequency.setValueAtTime(800, t + 0.2);
+                    osc.frequency.setValueAtTime(1200, t + 0.3);
+                    gain.gain.setValueAtTime(0.3, t);
+                    gain.gain.linearRampToValueAtTime(0.01, t + 0.6);
+                    osc.start(t); osc.stop(t + 0.6);
+                }
+            } catch(e){}
+        };
+
+        // DETERMINISTIC RNG (Tohumlu Rastgele Sayı Üretici - Herkes için aynı bölümü sağlar)
+        const createPRNG = (seed) => {
+            return () => {
+                let t = seed += 0x6D2B79F5;
+                t = Math.imul(t ^ t >>> 15, t | 1);
+                t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+                return ((t ^ t >>> 14) >>> 0) / 4294967296;
+            }
+        };
+
+        // Algoritmalar
+        const configTargetQueens = (size, rnd) => {
+            let cols = Array(size).fill(-1);
+            let usedCols = Array(size).fill(false);
+            
+            function solve(r) {
+                if (r === size) return true;
+                
+                let cands = Array.from({length: size}, (_, i) => i);
+                for (let i = cands.length - 1; i > 0; i--) {
+                    const j = Math.floor(rnd() * (i + 1));
+                    [cands[i], cands[j]] = [cands[j], cands[i]];
+                }
+                
+                for (let c of cands) {
+                    if (usedCols[c]) continue;
+                    if (r > 0 && Math.abs(c - cols[r-1]) <= 1) continue;
+                    
+                    usedCols[c] = true;
+                    cols[r] = c;
+                    if (solve(r+1)) return true;
+                    usedCols[c] = false;
+                }
+                return false;
+            }
+            return solve(0) ? cols : null;
+        };
+
+        const generateRegions = (cols, size, rnd) => {
+            let grid = Array(size).fill().map(()=>Array(size).fill(-1));
+            let fringe = [];
+            
+            const addFringe = (r, c) => {
+                const add = (nr, nc) => {
+                    if (nr>=0 && nr<size && nc>=0 && nc<size && grid[nr][nc]===-1 && !fringe.some(f => f.r===nr && f.c===nc)) {
+                        fringe.push({r: nr, c: nc});
+                    }
+                };
+                add(r-1, c); add(r+1, c); add(r, c-1); add(r, c+1);
+            };
+
+            for (let r=0; r<size; r++) {
+                grid[r][cols[r]] = r;
+                addFringe(r, cols[r]);
+            }
+            
+            while(fringe.length > 0) {
+                let idx = Math.floor(rnd() * fringe.length);
+                let {r, c} = fringe.splice(idx, 1)[0];
+                
+                let neighbors = [];
+                if (r>0 && grid[r-1][c] !== -1) neighbors.push(grid[r-1][c]);
+                if (r<size-1 && grid[r+1][c] !== -1) neighbors.push(grid[r+1][c]);
+                if (c>0 && grid[r][c-1] !== -1) neighbors.push(grid[r][c-1]);
+                if (c<size-1 && grid[r][c+1] !== -1) neighbors.push(grid[r][c+1]);
+                
+                if (neighbors.length > 0) {
+                    grid[r][c] = neighbors[Math.floor(rnd() * neighbors.length)];
+                    addFringe(r, c);
+                }
+            }
+            return grid;
+        };
+
+        const checkUnique = (regs, size) => {
+            let solutions = 0;
+            let cols = Array(size).fill(-1);
+            let usedRegs = Array(size).fill(false);
+            let usedCols = Array(size).fill(false);
+            
+            function solve(r) {
+                if (solutions > 1) return;
+                if (r === size) { solutions++; return; }
+                
+                for (let c=0; c<size; c++) {
+                    if (usedCols[c]) continue;
+                    let reg = regs[r][c];
+                    if (usedRegs[reg]) continue;
+                    if (r > 0 && Math.abs(c - cols[r-1]) <= 1) continue; 
+                    
+                    let diagConflict = false;
+                    for(let i=0; i<r; i++) {
+                        if (Math.abs(r - i) === Math.abs(c - cols[i])) diagConflict = true;
+                    }
+                    if (diagConflict) continue;
+                    
+                    usedCols[c] = true; usedRegs[reg] = true; cols[r] = c;
+                    solve(r+1);
+                    usedCols[c] = false; usedRegs[reg] = false;
+                }
+            }
+            solve(0);
+            return solutions === 1;
+        };
+
+        const buildLevelData = (size, lvl) => {
+            return new Promise((resolve) => {
+                // Her seviye için benzersiz ama sabit bir tohum (seed) belirle
+                let rnd = createPRNG(lvl * 1234567); 
+                
+                const work = () => {
+                    for(let i=0; i<15; i++) { // UI kilitlenmesin diye ufak yığınlar halinde üretir
+                        let queens = configTargetQueens(size, rnd);
+                        if (queens) {
+                            let regs = generateRegions(queens, size, rnd);
+                            if (checkUnique(regs, size)) {
+                                resolve({ size, targetQueens: queens, regions: regs });
+                                return;
+                            }
+                        }
+                    }
+                    setTimeout(work, 0); 
+                };
+                work();
+            });
+        };
+
+        const formatTime = (s) => `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
+
+        // Konfeti Sınıfı
+        class Confetti {
+            constructor(canvas) {
+                this.canvas = canvas;
+                this.ctx = canvas.getContext('2d');
+                this.particles = [];
+                this.colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
+                this.w = 0; this.h = 0;
+                this.resize();
+                window.addEventListener('resize', () => this.resize());
+            }
+            resize() {
+                this.w = this.canvas.width = this.canvas.offsetWidth;
+                this.h = this.canvas.height = this.canvas.offsetHeight;
+            }
+            fire() {
+                this.particles = [];
+                for(let i=0; i<100; i++) {
+                    this.particles.push({
+                        x: this.w / 2, y: this.h / 2,
+                        vx: (Math.random() - 0.5) * 15,
+                        vy: (Math.random() - 1) * 15 - 5,
+                        size: Math.random() * 8 + 4,
+                        color: this.colors[Math.floor(Math.random() * this.colors.length)],
+                        rot: Math.random() * 360,
+                        rotSpeed: (Math.random() - 0.5) * 10
+                    });
+                }
+                this.animate();
+            }
+            animate() {
+                if(this.particles.length === 0) return;
+                this.ctx.clearRect(0, 0, this.w, this.h);
+                let active = false;
+                this.particles.forEach(p => {
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    p.vy += 0.4;
+                    p.rot += p.rotSpeed;
+                    if(p.y < this.h) active = true;
+                    
+                    this.ctx.save();
+                    this.ctx.translate(p.x, p.y);
+                    this.ctx.rotate(p.rot * Math.PI / 180);
+                    this.ctx.fillStyle = p.color;
+                    this.ctx.fillRect(-p.size/2, -p.size/2, p.size, p.size);
+                    this.ctx.restore();
+                });
+                if(active) requestAnimationFrame(() => this.animate());
+                else this.ctx.clearRect(0, 0, this.w, this.h);
+            }
+        }
+
+        class GameApp {
+            constructor() {
+                this.MAX_LEVELS = 300;
+                this.devClickCount = 0;
+                this.loadProgress();
+                this.state = null;
+                this.history = [];
+                this.timerInt = null;
+                this.confetti = new Confetti(document.getElementById('confetti-canvas'));
+                
+                if (this.progress.theme === 'light') {
+                    document.documentElement.setAttribute('data-theme', 'light');
+                }
+                
+                this.renderMenu();
+            }
+            
+            loadProgress() {
+                let saved = localStorage.getItem('qn_progress_v3');
+                if (saved) {
+                    this.progress = JSON.parse(saved);
+                    // Eski oyuncularda hint yoksa 0 olarak tanımla
+                    if (this.progress.hints === undefined) this.progress.hints = 0;
+                } else {
+                    this.progress = { levels: {}, theme: 'dark', devMode: false, hints: 0 };
+                }
+            }
+            
+            saveProgress() {
+                localStorage.setItem('qn_progress_v3', JSON.stringify(this.progress));
+            }
+
+            toggleTheme() {
+                let current = document.documentElement.getAttribute('data-theme');
+                let target = current === 'dark' ? 'light' : 'dark';
+                document.documentElement.setAttribute('data-theme', target);
+                this.progress.theme = target;
+                this.saveProgress();
+            }
+
+            // Geliştirici Kilidi (Başlığa 5 kere tıklayınca)
+            devUnlockClick() {
+                this.devClickCount++;
+                if(this.devClickCount === 5) {
+                    this.progress.devMode = true;
+                    this.saveProgress();
+                    this.renderMenu();
+                    alert("Geliştirici Modu Aktif! Tüm 300 bölümün kilidi açıldı. İyi testler!");
+                }
+            }
+            
+            renderMenu() {
+                const grid = document.getElementById('level-grid');
+                grid.innerHTML = '';
+                
+                let maxUnlocked = 1;
+                let completedCount = 0;
+                let totalTimeSeconds = 0;
+
+                for(let i=1; i<=this.MAX_LEVELS; i++) {
+                    if (this.progress.levels[i]) {
+                        maxUnlocked = Math.max(maxUnlocked, i + 1);
+                        completedCount++;
+                        totalTimeSeconds += this.progress.levels[i].time || 0;
+                    }
+                }
+                
+                if(this.progress.devMode) maxUnlocked = this.MAX_LEVELS;
+
+                document.getElementById('progress-text').textContent = `${completedCount}/${this.MAX_LEVELS}`;
+                
+                // Toplam süreyi hesapla ve formatla (Saat/Dakika/Saniye)
+                let h = Math.floor(totalTimeSeconds / 3600);
+                let m = Math.floor((totalTimeSeconds % 3600) / 60);
+                let s = totalTimeSeconds % 60;
+                let timeStr = h > 0 ? `${h}s ${m}d ${s}sn` : `${m}d ${s}sn`;
+                document.getElementById('total-time-text').textContent = timeStr;
+
+                for(let i=1; i<=this.MAX_LEVELS; i++) {
+                    let btn = document.createElement('div');
+                    btn.className = 'level-btn';
+                    if (i > maxUnlocked) btn.classList.add('locked');
+                    
+                    let inside = `<div>${i}</div>`;
+                    if (this.progress.levels[i]) {
+                        let lvlTime = formatTime(this.progress.levels[i].time);
+                        inside += `<div class="level-time">⏱ ${lvlTime}</div>`;
+                    } else {
+                        inside += `<div class="no-time">-</div>`;
+                    }
+                    
+                    btn.innerHTML = inside;
+                    btn.onclick = () => { if(i <= maxUnlocked) this.startLevel(i); };
+                    grid.appendChild(btn);
+                }
+            }
+            
+            showHome() {
+                document.getElementById('game-screen').classList.remove('active');
+                document.getElementById('win-modal').classList.remove('active');
+                document.getElementById('home-screen').classList.add('active');
+                if (this.timerInt) clearInterval(this.timerInt);
+                this.renderMenu();
+            }
+            
+            // Hassas hesaplanmış boyut/seviye eğrisi
+            getSizeForLevel(lvl) {
+                if(lvl <= 20) return 4;
+                if(lvl <= 40) return 5;
+                if(lvl <= 65) return 6;
+                if(lvl <= 90) return 7;
+                if(lvl <= 115) return 8;
+                if(lvl <= 140) return 9;
+                if(lvl <= 165) return 10;
+                if(lvl <= 190) return 11;
+                if(lvl <= 215) return 12;
+                if(lvl <= 240) return 13;
+                if(lvl <= 260) return 14;
+                if(lvl <= 280) return 15;
+                return 16;
+            }
+
+            async startLevel(lvl) {
+                document.getElementById('home-screen').classList.remove('active');
+                document.getElementById('game-screen').classList.add('active');
+                document.getElementById('level-title').textContent = `Bölüm ${lvl}`;
+                
+                let size = this.getSizeForLevel(lvl);
+                
+                const loadingScreen = document.getElementById('loading-overlay');
+                const subtext = document.getElementById('loading-subtext');
+                loadingScreen.style.display = 'flex';
+                subtext.textContent = size >= 12 ? "Bu devasa harita birkac saniye alabilir..." : "Lütfen bekleyin...";
+                
+                let data = await buildLevelData(size, lvl);
+                
+                loadingScreen.style.display = 'none';
+                
+                this.state = {
+                    lvl: lvl,
+                    size: size,
+                    target: data.targetQueens,
+                    regions: data.regions,
+                    board: Array(size).fill().map(()=>Array(size).fill(0)),
+                    time: 0,
+                    conflicts: []
+                };
+                this.history = [];
+                
+                this.startTimer();
+                this.updateHud();
+                this.renderBoard();
+            }
+
+            resetLevel() {
+                if(!this.state) return;
+                this.saveStateToHistory();
+                this.state.board = Array(this.state.size).fill().map(()=>Array(this.state.size).fill(0));
+                this.updateHud();
+                this.renderBoard();
+            }
+            
+            startTimer() {
+                if (this.timerInt) clearInterval(this.timerInt);
+                this.timerInt = setInterval(() => {
+                    this.state.time++;
+                    document.getElementById('timer-text').textContent = formatTime(this.state.time);
+                }, 1000);
+            }
+            
+            updateHud() {
+                document.getElementById('timer-text').textContent = formatTime(this.state.time);
+                document.getElementById('hint-count').textContent = this.progress.hints;
+                document.getElementById('undo-btn').style.opacity = this.history.length > 0 ? '1' : '0.4';
+                document.getElementById('undo-btn').style.pointerEvents = this.history.length > 0 ? 'auto' : 'none';
+            }
+            
+            computeConflicts() {
+                const s = this.state.size;
+                let cfl = Array(s).fill().map(()=>Array(s).fill(false));
+                let qs = [];
+                for(let r=0;r<s;r++){
+                    for(let c=0;c<s;c++){
+                        if (this.state.board[r][c] === 1) qs.push({r, c, reg: this.state.regions[r][c]});
+                    }
+                }
+                for(let i=0; i<qs.length; i++){
+                    for(let j=i+1; j<qs.length; j++){
+                        let q1 = qs[i], q2 = qs[j];
+                        let conflict = false;
+                        if (q1.r === q2.r || q1.c === q2.c || q1.reg === q2.reg) conflict = true;
+                        else if (Math.abs(q1.r - q2.r) === 1 && Math.abs(q1.c - q2.c) === 1) conflict = true;
+                        
+                        if (conflict) { cfl[q1.r][q1.c] = true; cfl[q2.r][q2.c] = true; }
+                    }
+                }
+                this.state.conflicts = cfl;
+                return cfl;
+            }
+
+            renderBoard() {
+                const bc = document.getElementById('board-container');
+                const s = this.state.size;
+                bc.style.gridTemplateColumns = `repeat(${s}, 1fr)`;
+                bc.innerHTML = '';
+                
+                let cfl = this.computeConflicts();
+                
+                // Hücre içine sığması için font boyutunu dinamik ayarlıyoruz
+                let cellFontSize = Math.max(14, Math.floor(400 / s));
+
+                for(let r=0; r<s; r++) {
+                    for(let c=0; c<s; c++) {
+                        let cell = document.createElement('div');
+                        cell.className = 'cell';
+                        cell.style.fontSize = cellFontSize + 'px';
+                        
+                        let reg = this.state.regions[r][c];
+                        // 16 renk destekliyoruz (0-15)
+                        cell.style.backgroundColor = `var(--region-${reg % 16})`;
+                        
+                        let vBorder = '1px solid var(--cell-border)';
+                        let hBorder = '1px solid var(--cell-border)';
+                        let thick = '2px solid var(--region-border)';
+                        
+                        cell.style.borderTop = (r === 0 || this.state.regions[r-1][c] !== reg) ? thick : hBorder;
+                        cell.style.borderLeft = (c === 0 || this.state.regions[r][c-1] !== reg) ? thick : vBorder;
+                        if (r === s - 1 || this.state.regions[r+1][c] !== reg) cell.style.borderBottom = thick;
+                        if (c === s - 1 || this.state.regions[r][c+1] !== reg) cell.style.borderRight = thick;
+                        
+                        let v = this.state.board[r][c];
+                        if (v === 1) cell.innerHTML = '<div class="queen">👑</div>';
+                        if (v === 2) cell.innerHTML = '<div class="cross">❌</div>';
+                        
+                        cell.onmousedown = (e) => {
+                            if(e.button === 0) this.onCellClick(r, c);
+                            else if(e.button === 2) this.onCellRightClick(r, c);
+                        };
+                        cell.oncontextmenu = (e) => { e.preventDefault(); return false; };
+
+                        bc.appendChild(cell);
+                    }
+                }
+            }
+            
+            saveStateToHistory() {
+                this.history.push(JSON.parse(JSON.stringify(this.state.board)));
+            }
+
+            undo() {
+                if(this.history.length === 0) return;
+                this.state.board = this.history.pop();
+                playSound('click');
+                this.updateHud();
+                this.renderBoard();
+            }
+
+            onCellRightClick(r, c) {
+                if(audioCtx.state === 'suspended') audioCtx.resume();
+                this.saveStateToHistory();
+                
+                if (this.state.board[r][c] === 2) this.state.board[r][c] = 0;
+                else this.state.board[r][c] = 2;
+                
+                this.updateHud();
+                playSound('cross');
+                this.renderBoard();
+            }
+
+            onCellClick(r, c) {
+                if(audioCtx.state === 'suspended') audioCtx.resume();
+                this.saveStateToHistory();
+
+                let currentVal = this.state.board[r][c];
+                let nextVal = 0;
+                
+                if (currentVal === 0) nextVal = 1;
+                else if (currentVal === 1) nextVal = 2;
+                else nextVal = 0;
+
+                this.state.board[r][c] = nextVal;
+                
+                if(nextVal === 1) {
+                    playSound('click');
+                } else if(nextVal === 2) {
+                    playSound('cross');
+                } else {
+                    playSound('click');
+                }
+
+                this.updateHud();
+                this.renderBoard();
+                this.checkWin();
+            }
+            
+            useHint() {
+                if (this.progress.hints <= 0) {
+                    let btn = document.getElementById('hint-btn');
+                    let oldHTML = btn.innerHTML;
+                    btn.innerHTML = "💡 Bitti!";
+                    setTimeout(() => btn.innerHTML = oldHTML, 1000);
+                    return;
+                }
+                
+                this.saveStateToHistory();
+
+                let cands = [];
+                for(let r=0; r<this.state.size; r++) {
+                    let c = this.state.target[r];
+                    if (this.state.board[r][c] !== 1) cands.push({r, c, reg: this.state.regions[r][c]});
+                }
+                
+                if (cands.length > 0) {
+                    // İpucu kullanırken sabit seed'e gerek yok, gameplay kısmı dinamik kalabilir
+                    let t = cands[Math.floor(Math.random() * cands.length)];
+                    for(let r=0; r<this.state.size; r++){
+                        for(let c=0; c<this.state.size; c++){
+                            if (this.state.board[r][c] === 1) {
+                                let conf = false;
+                                if (t.r===r || t.c===c || t.reg===this.state.regions[r][c]) conf = true;
+                                if (Math.abs(t.r-r)<=1 && Math.abs(t.c-c)<=1) conf = true;
+                                if (conf) this.state.board[r][c] = 0;
+                            }
+                        }
+                    }
+                    this.state.board[t.r][t.c] = 1;
+                    this.progress.hints--;
+                    this.saveProgress();
+                    this.renderBoard();
+                    this.updateHud();
+                    playSound('click');
+                    this.checkWin();
+                }
+            }
+            
+            checkWin() {
+                let qCount = 0;
+                for(let r=0; r<this.state.size; r++){
+                    for(let c=0; c<this.state.size; c++){
+                        if (this.state.board[r][c] === 1) qCount++;
+                    }
+                }
+                let hasErrs = this.state.conflicts.some(rn => rn.some(v => v));
+                
+                if (qCount === this.state.size && !hasErrs) {
+                    clearInterval(this.timerInt);
+                    playSound('win');
+                    
+                    let isFirstWin = !this.progress.levels[this.state.lvl];
+                    let earnedHint = false;
+                    
+                    // Her 10 bölüm geçildiğinde ve daha önce bitirilmemişse ödül ver
+                    if (isFirstWin && this.state.lvl % 10 === 0) {
+                        this.progress.hints += 2;
+                        earnedHint = true;
+                    }
+                    
+                    // Sadece ilk oynayışta veya rekor kırıldığında süreyi kaydet
+                    if (isFirstWin || this.state.time < this.progress.levels[this.state.lvl].time) {
+                        this.progress.levels[this.state.lvl] = {
+                            time: this.state.time
+                        };
+                        this.saveProgress();
+                    }
+                    
+                    setTimeout(() => {
+                        document.getElementById('win-time').textContent = formatTime(this.state.time);
+                        
+                        let msg = "Bölümü başarıyla tamamladın.";
+                        if (earnedHint) {
+                            msg += "<br><br><span style='color: #f59e0b; font-weight: 800; font-size: 18px;'>🎁 +2 İpucu Kazandın!</span>";
+                        }
+                        document.querySelector('#win-modal p').innerHTML = msg;
+                        
+                        document.getElementById('win-modal').classList.add('active');
+                        this.confetti.fire();
+                    }, 400);
+                }
+            }
+            
+            nextLevel() {
+                document.getElementById('win-modal').classList.remove('active');
+                if (this.state.lvl < this.MAX_LEVELS) {
+                    this.startLevel(this.state.lvl + 1);
+                } else {
+                    this.showHome();
+                }
+            }
+        }
+        
+        const app = new GameApp();
+    </script>
+</body>
+</html>
