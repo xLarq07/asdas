@@ -528,10 +528,15 @@
                 for(let i=1; i<=this.MAX_LEVELS; i++) {
                     let btn = document.createElement('div');
                     btn.className = 'level-btn';
-                    if (i > maxUnlocked) btn.classList.add('locked');
+                    
+                    let isLocked = i > maxUnlocked;
+                    if (isLocked) btn.classList.add('locked');
                     
                     let inside = `<div>${i}</div>`;
-                    if (this.progress.levels[i]) {
+                    
+                    if (isLocked) {
+                        inside += `<div class="level-time" style="color: var(--lock-text); font-size: 14px; margin-top: 0px;">🔒</div>`;
+                    } else if (this.progress.levels[i]) {
                         let lvlTime = formatTime(this.progress.levels[i].time);
                         inside += `<div class="level-time">⏱ ${lvlTime}</div>`;
                     } else {
@@ -539,7 +544,7 @@
                     }
                     
                     btn.innerHTML = inside;
-                    btn.onclick = () => { if(i <= maxUnlocked) this.startLevel(i); };
+                    btn.onclick = () => { if(!isLocked) this.startLevel(i); };
                     grid.appendChild(btn);
                 }
             }
@@ -723,9 +728,9 @@
                 let currentVal = this.state.board[r][c];
                 let nextVal = 0;
                 
-                if (currentVal === 0) nextVal = 1;
-                else if (currentVal === 1) nextVal = 2;
-                else nextVal = 0;
+                if (currentVal === 0) nextVal = 2; // Boş -> Çarpı
+                else if (currentVal === 2) nextVal = 1; // Çarpı -> Taç
+                else nextVal = 0; // Taç -> Boş
 
                 this.state.board[r][c] = nextVal;
                 
