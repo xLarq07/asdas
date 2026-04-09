@@ -142,15 +142,15 @@
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: none; justify-content: center; align-items: center; z-index: 100; backdrop-filter: blur(5px); }
         .modal-overlay.active { display: flex; }
         
-        .modal-box { background: var(--card-bg); color: var(--text); padding: 35px 30px; border-radius: 24px; text-align: center; width: 90%; max-width: 400px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1); position: relative; overflow: hidden; max-height: 90vh; overflow-y: auto;}
+        .modal-box { background: var(--card-bg); color: var(--text); padding: 35px 30px; border-radius: 24px; text-align: center; width: 90%; max-width: 380px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1); position: relative; overflow: hidden; }
         .modal-box h2 { margin: 0 0 15px 0; color: #10b981; font-size: 32px; font-weight: 900; }
         .modal-box p { font-size: 16px; margin-bottom: 30px; opacity: 0.8; line-height: 1.5; }
         .modal-box .stats-row { display: flex; justify-content: space-around; margin-bottom: 30px; background: var(--bg); padding: 15px; border-radius: 16px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05); }
         .modal-box .s-val { display: block; font-size: 24px; font-weight: 900; color: var(--text); }
         .modal-box .s-lbl { font-size: 13px; font-weight: 600; opacity: 0.6; text-transform: uppercase; letter-spacing: 1px; }
         
-        .modal-btn { background: var(--btn-bg); color: var(--btn-text); padding: 16px 24px; font-size: 18px; border-radius: 14px; width: 100%; box-shadow: 0 4px 14px rgba(59, 130, 246, 0.4); margin-bottom: 10px;}
-        .modal-btn.secondary { background: var(--lock-bg); color: var(--text); box-shadow: none; }
+        .modal-btn { background: var(--btn-bg); color: var(--btn-text); padding: 16px 24px; font-size: 18px; border-radius: 14px; width: 100%; box-shadow: 0 4px 14px rgba(59, 130, 246, 0.4); }
+        .modal-btn.secondary { background: var(--lock-bg); color: var(--text); box-shadow: none; margin-top: 10px; }
 
         @keyframes slideUp { from { transform: translateY(60px) scale(0.9); opacity: 0; } to { transform: translateY(0) scale(1); opacity: 1; } }
         
@@ -171,20 +171,6 @@
         }
         .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
         .toast.error { background: #ef4444; box-shadow: 0 10px 25px rgba(239, 68, 68, 0.4); }
-
-        /* Auth Screen Styles */
-        .auth-container { background: var(--header-bg); padding: 30px; border-radius: 20px; box-shadow: var(--shadow); width: 100%; max-width: 400px; margin: auto; }
-        .auth-container h2 { margin: 0 0 20px 0; text-align: center; font-size: 28px; }
-        .auth-input { width: 100%; padding: 15px; margin-bottom: 15px; border-radius: 12px; border: 2px solid var(--lock-bg); background: var(--bg); color: var(--text); font-size: 16px; outline: none; transition: 0.2s; }
-        .auth-input:focus { border-color: var(--btn-bg); }
-        .auth-toggle-link { display: block; text-align: center; margin-top: 15px; color: var(--btn-bg); font-weight: 600; cursor: pointer; }
-
-        /* Leaderboard Styles */
-        .lb-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; background: var(--bg); border-radius: 12px; margin-bottom: 10px; font-weight: 600; }
-        .lb-rank { font-size: 18px; font-weight: 800; width: 30px; color: var(--btn-bg); }
-        .lb-name { flex: 1; text-align: left; }
-        .lb-stats { text-align: right; font-size: 14px; opacity: 0.8; }
-        .lb-stats span { display: block; color: var(--btn-bg); font-weight: 800;}
     </style>
 </head>
 <body>
@@ -192,48 +178,19 @@
     <!-- Bildirim -->
     <div id="toast" class="toast"></div>
 
-    <!-- Giriş / Kayıt Ekranı -->
-    <div id="auth-screen" class="screen">
-        <div class="auth-container">
-            <h2 id="auth-title">Giriş Yap</h2>
-            
-            <div id="register-fields" style="display: none;">
-                <input type="text" id="auth-name" class="auth-input" placeholder="Adınız">
-                <input type="text" id="auth-surname" class="auth-input" placeholder="Soyadınız">
-            </div>
-            
-            <input type="text" id="auth-username" class="auth-input" placeholder="Kullanıcı Adı (örn: oyuncu123)">
-            <input type="password" id="auth-password" class="auth-input" placeholder="Şifre">
-            
-            <button class="modal-btn" id="auth-action-btn" onclick="app.handleAuthAction()">Giriş Yap</button>
-            <span class="auth-toggle-link" onclick="app.toggleAuthMode()">Hesabın yok mu? Kayıt Ol</span>
-        </div>
-    </div>
-
     <!-- Ana Ekran -->
     <div id="home-screen" class="screen">
         <div class="header">
             <h1 onclick="app.devUnlockClick()">👑 QueenMatrix</h1>
             <div class="controls-group">
-                <button class="icon-btn" onclick="app.showLeaderboard()" title="Sıralama">🏆</button>
                 <button class="icon-btn" onclick="app.toggleTheme()" title="Temayı Değiştir">🌓</button>
-                <button class="icon-btn" onclick="app.logout()" title="Çıkış Yap">🚪</button>
             </div>
         </div>
         
         <div class="stats-bar" style="flex-direction: column; gap: 8px;">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <div>
-                    <span style="display:block; font-size:12px; opacity:0.6;">Oyuncu</span>
-                    <span id="player-name-display" style="color: var(--btn-bg); font-weight: 800;">-</span>
-                </div>
-                <div style="text-align: right;">
-                    <span style="display:block; font-size:12px; opacity:0.6;">Toplam Süre</span>
-                    <span id="total-time-text" style="color: var(--btn-bg); font-weight: 800;">00d 00sn</span>
-                </div>
-            </div>
-            <div style="text-align: center; margin-top: 5px; border-top: 2px dashed var(--lock-bg); padding-top: 10px;">
+            <div style="display: flex; justify-content: space-between;">
                 <span>İlerleme: <span id="progress-text" style="color: var(--btn-bg);">0/300</span></span>
+                <span>Toplam Süre: <span id="total-time-text" style="color: var(--btn-bg);">00d 00sn</span></span>
             </div>
         </div>
 
@@ -266,7 +223,7 @@
         </div>
     </div>
 
-    <!-- Kazanma Ekranı Modal -->
+    <!-- Kazanma Ekranı -->
     <div id="win-modal" class="modal-overlay">
         <div class="modal-box">
             <canvas id="confetti-canvas"></canvas>
@@ -283,22 +240,11 @@
         </div>
     </div>
 
-    <!-- Sıralama Modal -->
-    <div id="leaderboard-modal" class="modal-overlay">
-        <div class="modal-box" style="padding: 20px;">
-            <h2 style="color: var(--btn-bg); font-size: 24px; margin-bottom: 20px;">🏆 Sıralama</h2>
-            <div id="leaderboard-list" style="max-height: 60vh; overflow-y: auto; margin-bottom: 20px; padding-right: 5px;">
-                <!-- Sıralama öğeleri JS ile buraya gelecek -->
-            </div>
-            <button class="modal-btn secondary" onclick="document.getElementById('leaderboard-modal').classList.remove('active')">Kapat</button>
-        </div>
-    </div>
-
     <!-- Global Firebase Yüklemeleri (ES Modülleri) -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // Basit Ses Üretimi
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -516,15 +462,26 @@
         }
 
         // Firebase Yapılandırması (Eğer platform destekliyorsa otomatik çekecek)
-        // NOT: GitHub Pages üzerinde oynamak için projenizi barındıran kişinin Firebase yapılandırmasını eklemesi gerekir.
         let firebaseConfig = {};
         try {
             if (typeof __firebase_config !== 'undefined') {
                 firebaseConfig = JSON.parse(__firebase_config);
+            } else {
+                // NOT: Eğer bu HTML dosyasını doğrudan Github Pages üzerinden çalıştırıp BULUT KAYIT istiyorsanız,
+                // Kendi Firebase projenizi oluşturup Config objenizi buraya yapıştırmalısınız.
+                // Aksi takdirde sistem Firebase'i es geçip otomatik olarak LocalStorage (çevrimdışı kayıt) ile çalışmaya devam eder.
+                /*
+                firebaseConfig = {
+                    apiKey: "YOUR_API_KEY",
+                    authDomain: "YOUR_AUTH_DOMAIN",
+                    projectId: "YOUR_PROJECT_ID",
+                    // ...
+                };
+                */
             }
         } catch (e) {}
 
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'queenmatrix_oyun';
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'queenmatrix';
         let fbApp, auth, db;
         
         if (Object.keys(firebaseConfig).length > 0) {
@@ -541,16 +498,14 @@
                 this.history = [];
                 this.timerInt = null;
                 this.confetti = new Confetti(document.getElementById('confetti-canvas'));
-                
-                this.authMode = 'login'; // 'login' veya 'register'
-                this.currentUser = null; // { username, name, surname }
-                this.progress = { levels: {}, theme: 'dark', devMode: false, hints: 0, completedCount: 0, totalTimeSeconds: 0 };
+                this.userId = null;
+                this.progress = { levels: {}, theme: 'dark', devMode: false, hints: 0 };
             }
 
             async init() {
-                this.showLoadingScreen("Sisteme Bağlanıyor...");
+                this.showLoadingScreen("Buluta bağlanıyor...");
                 
-                // 1. Firebase Auth Başlat (Sıralama veritabanına erişim için kural gereği anonim giriş yapılmalı)
+                // 1. Firebase Auth Başlat
                 if (auth) {
                     try {
                         if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
@@ -561,233 +516,29 @@
                         
                         await new Promise((resolve) => {
                             const unsubscribe = onAuthStateChanged(auth, (user) => {
+                                if(user) this.userId = user.uid;
                                 unsubscribe();
                                 resolve();
                             });
                         });
                     } catch (e) {
-                        console.log("Firebase Auth hatası. Çevrimdışı çalışılacak.", e);
+                        console.log("Firebase Auth failed, falling back to local storage.", e);
                     }
                 }
 
+                // 2. İlerlemeyi Yükle
+                await this.loadProgress();
+                
                 this.hideLoadingScreen();
                 
-                // Tema Yükleme
-                let savedTheme = localStorage.getItem('qm_theme');
-                if (savedTheme === 'light') {
+                if (this.progress.theme === 'light') {
                     document.documentElement.setAttribute('data-theme', 'light');
-                    this.progress.theme = 'light';
                 }
-
-                // Önceden giriş yapılmış mı kontrol et
-                let savedUser = localStorage.getItem('qm_current_user');
-                if (savedUser) {
-                    this.currentUser = JSON.parse(savedUser);
-                    await this.loadProgress();
-                    this.showHome();
-                } else {
-                    document.getElementById('auth-screen').classList.add('active');
-                }
+                
+                document.getElementById('home-screen').classList.add('active');
+                this.renderMenu();
             }
 
-            // --- AUTHENTICATION (KAYIT / GİRİŞ SİSTEMİ) ---
-
-            toggleAuthMode() {
-                this.authMode = this.authMode === 'login' ? 'register' : 'login';
-                document.getElementById('auth-title').textContent = this.authMode === 'login' ? 'Giriş Yap' : 'Kayıt Ol';
-                document.getElementById('register-fields').style.display = this.authMode === 'login' ? 'none' : 'block';
-                document.getElementById('auth-action-btn').textContent = this.authMode === 'login' ? 'Giriş Yap' : 'Kayıt Ol';
-                document.querySelector('.auth-toggle-link').textContent = this.authMode === 'login' ? 'Hesabın yok mu? Kayıt Ol' : 'Zaten hesabın var mı? Giriş Yap';
-            }
-
-            async handleAuthAction() {
-                if(!db) {
-                    this.showToast("Veritabanı bağlantısı yok. Lütfen Firebase ayarlarını kontrol edin.", true);
-                    return;
-                }
-
-                const username = document.getElementById('auth-username').value.trim().toLowerCase();
-                const password = document.getElementById('auth-password').value.trim();
-                
-                if(!username || !password) {
-                    this.showToast("Lütfen kullanıcı adı ve şifre girin.", true);
-                    return;
-                }
-                
-                // Kullanıcı adında geçersiz karakterleri engelle
-                if(!/^[a-z0-9_]+$/.test(username)) {
-                    this.showToast("Kullanıcı adı sadece küçük harf, rakam ve alt tire içerebilir.", true);
-                    return;
-                }
-
-                this.showLoadingScreen("İşlem yapılıyor...");
-
-                try {
-                    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'players', username);
-                    const docSnap = await getDoc(docRef);
-
-                    if (this.authMode === 'register') {
-                        const name = document.getElementById('auth-name').value.trim();
-                        const surname = document.getElementById('auth-surname').value.trim();
-                        
-                        if(!name || !surname) {
-                            this.hideLoadingScreen();
-                            this.showToast("Lütfen ad ve soyad girin.", true);
-                            return;
-                        }
-
-                        if (docSnap.exists()) {
-                            this.hideLoadingScreen();
-                            this.showToast("Bu kullanıcı adı zaten alınmış!", true);
-                            return;
-                        }
-
-                        // Yeni Kullanıcı Oluştur (Public veritabanı klasöründe tutuyoruz)
-                        let newPlayerData = {
-                            username: username,
-                            password: password, // Not: Gerçek projelerde şifre hashlenir. Bu arkadaş arası bir proje olduğu için basit tutulmuştur.
-                            name: name,
-                            surname: surname,
-                            progress: { levels: {}, theme: this.progress.theme || 'dark', devMode: false, hints: 0, completedCount: 0, totalTimeSeconds: 0 }
-                        };
-                        
-                        await setDoc(docRef, newPlayerData);
-                        this.currentUser = { username, name, surname };
-                        this.progress = newPlayerData.progress;
-                        
-                        localStorage.setItem('qm_current_user', JSON.stringify(this.currentUser));
-                        this.hideLoadingScreen();
-                        this.showToast("Kayıt başarılı! Hoş geldin.");
-                        
-                        document.getElementById('auth-screen').classList.remove('active');
-                        this.showHome();
-
-                    } else {
-                        // GİRİŞ YAP (LOGIN)
-                        if (!docSnap.exists()) {
-                            this.hideLoadingScreen();
-                            this.showToast("Böyle bir kullanıcı bulunamadı.", true);
-                            return;
-                        }
-
-                        const data = docSnap.data();
-                        if (data.password !== password) {
-                            this.hideLoadingScreen();
-                            this.showToast("Hatalı şifre girdiniz.", true);
-                            return;
-                        }
-
-                        this.currentUser = { username: data.username, name: data.name, surname: data.surname };
-                        this.progress = data.progress || { levels: {}, theme: 'dark', devMode: false, hints: 0, completedCount: 0, totalTimeSeconds: 0 };
-                        
-                        localStorage.setItem('qm_current_user', JSON.stringify(this.currentUser));
-                        
-                        if (this.progress.theme === 'light') {
-                            document.documentElement.setAttribute('data-theme', 'light');
-                        }
-
-                        this.hideLoadingScreen();
-                        this.showToast("Giriş başarılı!");
-                        document.getElementById('auth-screen').classList.remove('active');
-                        this.showHome();
-                    }
-                } catch (error) {
-                    this.hideLoadingScreen();
-                    console.error(error);
-                    this.showToast("Bir hata oluştu. Lütfen tekrar deneyin.", true);
-                }
-            }
-
-            logout() {
-                localStorage.removeItem('qm_current_user');
-                this.currentUser = null;
-                this.progress = { levels: {}, theme: 'dark', devMode: false, hints: 0, completedCount: 0, totalTimeSeconds: 0 };
-                
-                document.getElementById('home-screen').classList.remove('active');
-                document.getElementById('game-screen').classList.remove('active');
-                document.getElementById('leaderboard-modal').classList.remove('active');
-                
-                document.getElementById('auth-username').value = "";
-                document.getElementById('auth-password').value = "";
-                document.getElementById('auth-screen').classList.add('active');
-                this.showToast("Çıkış yapıldı.");
-            }
-
-            // --- SIRALAMA (LEADERBOARD) ---
-
-            async showLeaderboard() {
-                if(!db) {
-                    this.showToast("Bağlantı yok. Lütfen internetinizi kontrol edin.", true);
-                    return;
-                }
-                
-                this.showLoadingScreen("Sıralama yükleniyor...");
-                
-                try {
-                    const playersRef = collection(db, 'artifacts', appId, 'public', 'data', 'players');
-                    const snapshot = await getDocs(playersRef);
-                    
-                    let players = [];
-                    snapshot.forEach(doc => {
-                        let data = doc.data();
-                        let p = data.progress || {};
-                        players.push({
-                            fullName: `${data.name} ${data.surname}`,
-                            username: data.username,
-                            completedCount: p.completedCount || 0,
-                            totalTimeSeconds: p.totalTimeSeconds || 0
-                        });
-                    });
-
-                    // Sıralama Kriteri: Önce en çok bölüm bitiren, eşitse en az süre harcayan
-                    players.sort((a, b) => {
-                        if (b.completedCount !== a.completedCount) return b.completedCount - a.completedCount;
-                        return a.totalTimeSeconds - b.totalTimeSeconds;
-                    });
-
-                    const listEl = document.getElementById('leaderboard-list');
-                    listEl.innerHTML = '';
-                    
-                    if (players.length === 0) {
-                        listEl.innerHTML = '<p>Henüz kimse sıralamada yok.</p>';
-                    } else {
-                        players.forEach((player, index) => {
-                            let h = Math.floor(player.totalTimeSeconds / 3600);
-                            let m = Math.floor((player.totalTimeSeconds % 3600) / 60);
-                            let s = player.totalTimeSeconds % 60;
-                            let timeStr = h > 0 ? `${h}sa ${m}dk ${s}sn` : `${m}dk ${s}sn`;
-                            
-                            let isMe = this.currentUser && this.currentUser.username === player.username;
-                            
-                            let itemHTML = `
-                                <div class="lb-item" style="${isMe ? 'border: 2px solid var(--btn-bg);' : ''}">
-                                    <div class="lb-rank">#${index + 1}</div>
-                                    <div class="lb-name">
-                                        ${player.fullName}
-                                        <span style="display:block; font-size:10px; opacity:0.5;">@${player.username}</span>
-                                    </div>
-                                    <div class="lb-stats">
-                                        <span>${player.completedCount} Bölüm</span>
-                                        ${timeStr}
-                                    </div>
-                                </div>
-                            `;
-                            listEl.innerHTML += itemHTML;
-                        });
-                    }
-
-                    this.hideLoadingScreen();
-                    document.getElementById('leaderboard-modal').classList.add('active');
-                } catch (err) {
-                    console.error(err);
-                    this.hideLoadingScreen();
-                    this.showToast("Sıralama yüklenirken hata oluştu.", true);
-                }
-            }
-
-
-            // --- OYUN ALTYAPISI ---
-            
             showToast(msg, isError = false) {
                 const toast = document.getElementById('toast');
                 toast.innerHTML = msg;
@@ -809,16 +560,28 @@
             }
             
             async loadProgress() {
-                // Sadece giriş yapmış kullanıcılar için buluttan çek
-                if (this.currentUser && db) {
+                // Her zaman önce yerel veriyi al (Eğer buluttan gelmezse güvende olmak için)
+                let localSaved = localStorage.getItem('qn_progress_v4');
+                if (localSaved) {
+                    this.progress = JSON.parse(localSaved);
+                    if (this.progress.hints === undefined) this.progress.hints = 0;
+                }
+
+                // Eğer Firebase devredeyse, verileri buluttan çek
+                if (this.userId && db) {
                     try {
-                        const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'players', this.currentUser.username);
+                        const docRef = doc(db, 'artifacts', appId, 'users', this.userId, 'gamedata', 'progress');
                         const docSnap = await getDoc(docRef);
                         
                         if (docSnap.exists()) {
-                            let data = docSnap.data();
-                            this.progress = data.progress || this.progress;
+                            this.progress = docSnap.data();
                             if (this.progress.hints === undefined) this.progress.hints = 0;
+                            
+                            // Yerel veriyi bulutla eşitle
+                            localStorage.setItem('qn_progress_v4', JSON.stringify(this.progress));
+                        } else {
+                            // Bulutta veri yoksa, yerel veriyi buluta gönder
+                            if (localSaved) await this.saveProgress();
                         }
                     } catch (e) {
                         console.log("Bulut yükleme hatası. Çevrimdışı devam ediliyor.");
@@ -827,19 +590,19 @@
             }
             
             async saveProgress() {
-                // Aktif bir kullanıcı varsa, veritabanına oyuncunun dökümanını kaydet
-                if (this.currentUser && db) {
+                // Her halükarda yerel diske kaydet
+                localStorage.setItem('qn_progress_v4', JSON.stringify(this.progress));
+                
+                // Firebase aktifse buluta kaydet
+                if (this.userId && db) {
                     try {
-                        const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'players', this.currentUser.username);
-                        // Sadece progress objesini güncellemek için merge kullanıyoruz
-                        await setDoc(docRef, { progress: this.progress }, { merge: true });
+                        const docRef = doc(db, 'artifacts', appId, 'users', this.userId, 'gamedata', 'progress');
+                        // merge: true ile sadece değişenleri günceller, veriyi yok etmez
+                        await setDoc(docRef, this.progress, { merge: true });
                     } catch (e) {
                         console.log("Buluta kaydetme hatası.");
                     }
                 }
-                
-                // Temayı her zaman yerel cihaza kaydet (Giriş yapmadan da koyu/açık mod çalışsın)
-                localStorage.setItem('qm_theme', this.progress.theme);
             }
 
             toggleTheme() {
@@ -850,6 +613,7 @@
                 this.saveProgress();
             }
 
+            // Geliştirici Kilidi (Başlığa 5 kere tıklayınca)
             devUnlockClick() {
                 this.devClickCount++;
                 if(this.devClickCount === 5) {
@@ -878,13 +642,9 @@
                 
                 if(this.progress.devMode) maxUnlocked = this.MAX_LEVELS;
 
-                // İstatistikleri güncel tut
-                this.progress.completedCount = completedCount;
-                this.progress.totalTimeSeconds = totalTimeSeconds;
-
                 document.getElementById('progress-text').textContent = `${completedCount}/${this.MAX_LEVELS}`;
-                document.getElementById('player-name-display').textContent = this.currentUser ? `${this.currentUser.name} ${this.currentUser.surname}` : "Misafir";
                 
+                // Toplam süreyi hesapla ve formatla (Saat/Dakika/Saniye)
                 let h = Math.floor(totalTimeSeconds / 3600);
                 let m = Math.floor((totalTimeSeconds % 3600) / 60);
                 let s = totalTimeSeconds % 60;
@@ -918,7 +678,6 @@
             showHome() {
                 document.getElementById('game-screen').classList.remove('active');
                 document.getElementById('win-modal').classList.remove('active');
-                document.getElementById('auth-screen').classList.remove('active');
                 document.getElementById('home-screen').classList.add('active');
                 if (this.timerInt) clearInterval(this.timerInt);
                 this.renderMenu();
@@ -1024,6 +783,7 @@
                 
                 let cfl = this.computeConflicts();
                 
+                // Hücre içine sığması için font boyutunu dinamik ayarlıyoruz
                 let cellFontSize = Math.max(14, Math.floor(400 / s));
 
                 for(let r=0; r<s; r++) {
@@ -1170,7 +930,7 @@
                         this.progress.levels[this.state.lvl] = {
                             time: this.state.time
                         };
-                        this.saveProgress(); // Buluta kaydeder
+                        this.saveProgress();
                     }
                     
                     setTimeout(() => {
@@ -1198,7 +958,7 @@
             }
         }
         
-        // Uygulamayı Başlat
+        // Uygulamayı Başlat (Tüm Firebase ve Loading İşlemleri Tamamlanınca Ekrana Düşer)
         const app = new GameApp();
         window.app = app;
         app.init();
